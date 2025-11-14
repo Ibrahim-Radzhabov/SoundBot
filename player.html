@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#3390ec">
+    <title>🎵 Music Player</title>
+    
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="player.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Загрузка плеера...</p>
+    </div>
+
+    <!-- Main Container -->
+    <div id="app" class="app hidden">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="app-title">🎵 Music Player</h1>
+            <button id="settings-btn" class="icon-btn" title="Настройки">⚙️</button>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="player">🎵 Плеер</button>
+            <button class="tab-btn" data-tab="playlists">📋 Плейлисты</button>
+            <button class="tab-btn" data-tab="search">🔍 Поиск</button>
+        </nav>
+
+        <!-- Player Tab -->
+        <div id="player-tab" class="tab-content active">
+            <!-- Now Playing Card -->
+            <div class="now-playing-card">
+                <div class="album-art-container">
+                    <img id="album-art" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%233390ec' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' font-size='80' text-anchor='middle' dominant-baseline='middle' fill='white'%3E🎵%3C/text%3E%3C/svg%3E" alt="Album Art" class="album-art">
+                    <div class="vinyl-effect"></div>
+                </div>
+                <div class="track-info">
+                    <h2 id="track-title" class="track-title">Выберите трек</h2>
+                    <p id="track-artist" class="track-artist">—</p>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <span id="current-time" class="time-display">0:00</span>
+                <div class="progress-bar-wrapper">
+                    <input type="range" id="progress-slider" class="progress-slider" min="0" max="100" value="0">
+                </div>
+                <span id="total-time" class="time-display">0:00</span>
+            </div>
+
+            <!-- Volume Control -->
+            <div class="volume-container">
+                <span class="volume-icon">🔊</span>
+                <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="70">
+                <span id="volume-value" class="volume-value">70%</span>
+            </div>
+
+            <!-- Player Controls -->
+            <div class="player-controls">
+                <button id="shuffle-btn" class="control-btn" title="Перемешать">🔀</button>
+                <button id="prev-btn" class="control-btn" title="Предыдущий">⏮</button>
+                <button id="play-pause-btn" class="control-btn play-pause" title="Воспроизвести">▶️</button>
+                <button id="next-btn" class="control-btn" title="Следующий">⏭</button>
+                <button id="repeat-btn" class="control-btn" title="Повтор" data-mode="off">🔁</button>
+            </div>
+
+            <!-- Current Playlist -->
+            <div class="current-playlist-section">
+                <h3>Текущий плейлист</h3>
+                <div id="current-playlist" class="playlist-tracks"></div>
+            </div>
+        </div>
+
+        <!-- Playlists Tab -->
+        <div id="playlists-tab" class="tab-content">
+            <div class="playlists-header">
+                <button id="create-playlist-btn" class="btn-primary">➕ Создать плейлист</button>
+            </div>
+            <div id="playlists-list" class="playlists-list"></div>
+        </div>
+
+        <!-- Search Tab -->
+        <div id="search-tab" class="tab-content">
+            <div class="search-section">
+                <div class="search-input-wrapper">
+                    <input type="text" id="search-input" class="search-input" placeholder="Введите название, исполнителя, URL или выберите файл...">
+                    <button id="search-btn" class="search-btn">🔍</button>
+                </div>
+                <div class="search-tabs">
+                    <button class="search-tab-btn active" data-search-type="local">📁 Локальные</button>
+                    <button class="search-tab-btn" data-search-type="url">🔗 По URL</button>
+                    <button class="search-tab-btn" data-search-type="youtube">📺 YouTube</button>
+                    <button class="search-tab-btn" data-search-type="file">📎 Загрузить файл</button>
+                </div>
+            </div>
+            <div id="search-results" class="search-results"></div>
+        </div>
+    </div>
+
+    <!-- Playlist Modal -->
+    <div id="playlist-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="playlist-modal-title">Новый плейлист</h2>
+                <button class="modal-close" id="playlist-modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="playlist-name-input" class="input-field" placeholder="Название плейлиста">
+                <div id="playlist-tracks-list" class="playlist-tracks-list"></div>
+                <button id="save-playlist-btn" class="btn-primary">💾 Сохранить</button>
+                <button id="delete-playlist-btn" class="btn-danger">🗑 Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Настройки</h2>
+                <button class="modal-close" id="settings-modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label>Тема</label>
+                    <select id="theme-select" class="input-field">
+                        <option value="auto">Автоматически</option>
+                        <option value="light">Светлая</option>
+                        <option value="dark">Тёмная</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>Качество воспроизведения</label>
+                    <select id="quality-select" class="input-field">
+                        <option value="high">Высокое</option>
+                        <option value="medium">Среднее</option>
+                        <option value="low">Низкое</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <button id="clear-data-btn" class="btn-danger">🗑 Очистить все данные</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="player.js"></script>
+</body>
+</html>
+
+</title>
+</head>
+<body>
+
+</body>
+</html>
