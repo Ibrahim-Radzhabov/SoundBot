@@ -3,9 +3,11 @@ import { useEffect, useRef, useState } from 'react'
 export default function VolumeSlider({
   value,
   onChange,
+  disabled = false,
 }: {
   value: number
   onChange: (v: number) => void
+  disabled?: boolean
 }) {
   const trackRef = useRef<HTMLDivElement | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -21,7 +23,7 @@ export default function VolumeSlider({
 
   useEffect(() => {
     const onMove = (e: MouseEvent | TouchEvent) => {
-      if (!dragging) return
+      if (!dragging || disabled) return
       const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
       updateFromClientX(clientX)
     }
@@ -38,20 +40,23 @@ export default function VolumeSlider({
       window.removeEventListener('mouseup', onUp)
       window.removeEventListener('touchend', onUp)
     }
-  }, [dragging])
+  }, [disabled, dragging])
 
   return (
     <div
       ref={trackRef}
       className="volume-track"
       onMouseDown={(e) => {
+        if (disabled) return
         setDragging(true)
         updateFromClientX(e.clientX)
       }}
       onTouchStart={(e) => {
+        if (disabled) return
         setDragging(true)
         updateFromClientX(e.touches[0].clientX)
       }}
+      aria-disabled={disabled}
     >
       <div
         className="absolute left-0 top-0 h-full rounded-full bg-white/20"
